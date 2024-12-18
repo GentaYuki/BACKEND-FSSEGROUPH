@@ -13,7 +13,7 @@ class Product(db.Model):
     __tablename__ = 'products'
     id = Column(Integer, primary_key=True, autoincrement=True, nullable=False)
     title = Column(String(255), nullable=False)
-    price = Column(DECIMAL(10, 2), nullable=False)
+    price = Column(Integer, nullable=False)
     stock_qty = Column(Integer, nullable=False)
     category_id = Column(Integer, ForeignKey(ListCategory.id), nullable=False)
     status = Column(Enum(StatusProduct), nullable=False)

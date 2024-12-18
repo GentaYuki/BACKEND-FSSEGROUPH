@@ -23,7 +23,7 @@ def get_all_product():
             {
                 "title": product.title,
                 "ID" : product.id,
-                "price": product.price,
+                "price": int(product.price),
                 "stock_qty": product.stock_qty,
                 "category": category.category if (category := ListCategory.query.get(product.category_id)) else None,
                 "status": product.status.name,
