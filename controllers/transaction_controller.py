@@ -116,10 +116,9 @@ def create_order_transaction():
                 }), 404
 
             serialized_order_product = {
-                "id": order_product.id,
-                "order_id": order_product.order_id,
+                "transaction_id": order_product.order_id,
                 "customer": user.userName,
-                "product_id": order_product.product_id,
+                "title": Nproduct.title if (Nproduct := Product.query.get(order_product.product_id)) else None,
                 "quantity": order_product.quantity,
                 "sum_price": order_product.sum_price,
                 "seller": seller.userName
@@ -127,9 +126,9 @@ def create_order_transaction():
             serialized_order_products.append(serialized_order_product)
 
         serialized_transaction_detail = {
-            "id": transaction_detail.id,
+            "transaction_id": transaction_detail.id,
             "user_id": transaction_detail.user_id,
-            "payment_id": transaction_detail.payment_id,
+            "payment_method": payment_method.payment_method.value,
             "total_price": transaction_detail.total_price,
             "status": transaction_detail.status.value
         }

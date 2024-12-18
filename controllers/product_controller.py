@@ -174,7 +174,7 @@ def create_product():
         product_data = {
             'id': new_product.id,
             'title': new_product.title,
-            'price': str(new_product.price),
+            'price': new_product.price,
             'stock_qty': new_product.stock_qty,
             'category': category.category,
             'description': new_product.description,
