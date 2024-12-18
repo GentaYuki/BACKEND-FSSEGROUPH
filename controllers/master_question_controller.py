@@ -1,6 +1,5 @@
 from flask import Blueprint, jsonify
 from models.user_models.master_question import MasterQuestion
-from app import db
 
 
 masterBp = Blueprint('masterBp',__name__)

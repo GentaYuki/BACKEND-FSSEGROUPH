@@ -1,4 +1,4 @@
-from flask import Blueprint, jsonify, request, current_app, send_file
+from flask import Blueprint, jsonify, request, current_app, send_from_directory
 from models.product_models.product import Product
 from app import db
 from flask_jwt_extended import jwt_required, get_jwt_identity
@@ -196,8 +196,12 @@ def create_product():
 
 @productBp.route('/images/<int:product_id>/<filename>')
 def serve_image(product_id, filename):
-    file_path = os.path.join(current_app.root_path, 'images', str(product_id), filename)
-    return send_file(file_path, mimetype='image/jpeg')
+    directory = os.path.join(current_app.root_path, 'images', str(product_id))
+    file_path = os.path.join(directory, filename)
+    if os.path.isfile(file_path):
+        return send_from_directory(directory, filename, mimetype='image/jpeg')
+    else:
+        return jsonify({'error': 'File not found'}), 404
 
 # add new image to existing product (Not Used)
 # @productBp.route('/product/<int:id>/addimage', methods=['POST'])
