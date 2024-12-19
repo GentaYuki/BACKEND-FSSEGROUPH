@@ -300,7 +300,7 @@ def update_transaction():
             "success": False,
             "message": "Transaction detail not found"
         }), 404
-    print(transaction_detail_sellers.status)
+    # print(transaction_detail_sellers.status)
 
     if transaction_detail_sellers.seller_id != user.id:
         return jsonify({
@@ -308,11 +308,13 @@ def update_transaction():
             "message": "You are not authorized to update this product"
         }), 403
 
-    current_status = transaction_detail_sellers.status
+    current_status_data = transaction_detail_sellers.status
+    current_status = current_status_data.value
     new_status = data.get('status')
-
+    
+    new_status_enum = StatusEnumSell(new_status)
     # Define the valid sequence for status updates
-    status_order = [StatusEnumSell.pending, StatusEnumSell.on_process, StatusEnumSell.on_delivery]
+    status_order = [StatusEnumSell.pending.value, StatusEnumSell.on_process.value, StatusEnumSell.on_delivery.value]
 
     if new_status == StatusEnumSell.rejected:
         # If the new status is 'rejected', allow it from any state
@@ -321,15 +323,30 @@ def update_transaction():
     else:
         # Check if the status change follows the allowed order
         if new_status not in status_order:
+            print(status_order)
             return jsonify({
                 "success": False,
-                "message": "Invalid status transition."
+                "message": "Invalid status transition.",
+                "new status" : new_status
             }), 400
-
-        if current_status == StatusEnumSell.pending and new_status == StatusEnumSell.on_process:
-            transaction_detail_sellers.status = new_status
-        elif current_status == StatusEnumSell.on_process and new_status == StatusEnumSell.on_delivery:
-            transaction_detail_sellers.status = new_status
+        print(current_status)
+        print(new_status_enum)
+        print(StatusEnumSell.pending.value)
+        print(StatusEnumSell.on_process.value)
+        print(StatusEnumSell.on_process.value == new_status)
+        print(current_status==StatusEnumSell.pending)
+        if current_status == StatusEnumSell.pending.value and new_status_enum ==    StatusEnumSell.on_process:
+            transaction_detail_sellers.status = new_status_enum
+            return jsonify({
+                "success" : True,
+                "message" : "Status Updated Successfully 1"
+            })
+        elif current_status == StatusEnumSell.on_process.value and new_status_enum == StatusEnumSell.on_delivery:
+            transaction_detail_sellers.status = new_status_enum
+            return jsonify({
+                "success" : True,
+                "message" : "Status Updated Successfully 2"
+            })
         else:
             return jsonify({
                 "success": False,

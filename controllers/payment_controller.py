@@ -1,28 +1,33 @@
-from flask import Blueprint, jsonify
+from flask import Blueprint, jsonify, request
 from models.transaction_models.payment_method import PaymentMethod
 
 paymentBp = Blueprint('paymentBp',__name__)
 
-@paymentBp.route('/paymentmethod', methods=['GET'])
+@paymentBp.route('/paymentmethod', methods=['GET', 'OPTIONS'])
 def get_payment_method():
-    try:
-        payment_methods = PaymentMethod.query.all()
-        serialized_payment_methods = [
-            {
-                "id": payment_method.id,
-                "name": payment_method.payment_name,
-                "number": payment_method.payment_number
-            }
-            for payment_method in payment_methods
-        ]
+    if request.method == 'OPTIONS':
         return jsonify({
-            "success": True,
-            "message": "Payment method retrieved successfully",
-            "data": serialized_payment_methods
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+            'Access-Control-Allow-Headers': 'Content-Type'
         }), 200
-    except Exception as e:
-        return jsonify({
-            "success": False,
-            "message": f"Error retrieving payment method: {str(e)}",
-            "data": None
-        }), 500
+
+    payment_methods = PaymentMethod.query.all()
+    serialized_payment_methods = [
+        {
+            "id": payment_method.id,
+            "name": payment_method.payment_name,
+            "number": payment_method.payment_number
+        }
+        for payment_method in payment_methods
+    ]
+
+    response = jsonify({
+        "success": True,
+        "message": "Payment method retrieved successfully",
+        "data": serialized_payment_methods
+    })
+    response.headers.add('Access-Control-Allow-Origin', '*')
+    response.headers.add('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
+    response.headers.add('Access-Control-Allow-Headers', 'Content-Type')
+    return response
