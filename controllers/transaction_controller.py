@@ -3,8 +3,8 @@ from app import db
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from models.user_models.user import User, Role_division
 from models.transaction_models.payment_method import PaymentMethod
-from models.transaction_models.transaction_detail_customer import TrasactionDetailCustomer
-from models.transaction_models.transaction_detail_seller import TransactionDetailSeller
+from models.transaction_models.transaction_detail_customer import TrasactionDetailCustomer,StatusEnumCust
+from models.transaction_models.transaction_detail_seller import TransactionDetailSeller, StatusEnumSell
 from models.transaction_models.discount_code import DiscountCode
 from models.transaction_models.order_product import OrderProduct
 from models.product_models.product import Product
@@ -75,6 +75,12 @@ def create_order_transaction():
                     "message": "Product not found"
                 }), 404
 
+            if product.stock_qty < product_data['quantity']:
+                return jsonify({
+                    "success": False,
+                    "message": "Insufficient product quantity"
+                }), 400
+            
             sum_price = product.price * product_data['quantity']
             total_price += sum_price
 
@@ -96,7 +102,7 @@ def create_order_transaction():
             user_id=user.id,
             payment_id=payment_method.id,
             total_price=total_price,
-            status="pending"
+            status=StatusEnumCust.pending
         )
         db.session.add(transaction_detail)
         db.session.commit()
@@ -142,7 +148,7 @@ def create_order_transaction():
                     seller_id=order_product.seller_id,
                     product_id=order_product.product_id,
                     total_price=order_product.sum_price,
-                    status="pending"
+                    status=StatusEnumSell.pending
                 )
             )
         
@@ -166,7 +172,7 @@ def create_order_transaction():
         
     finally:
         db.session.close()
-        
+#cek histoy transaction for customer        
 @transactionBp.route('/historytransaction', methods=['GET'])
 @jwt_required()
 def get_transaction():
@@ -233,7 +239,7 @@ def get_transaction():
 #create route to cek transaction detail for seller, so seller can cek each product in transacton detail seller
 @transactionBp.route('/transaction/seller', methods=['GET'])
 @jwt_required()
-def get_transaction_detail(seller_id):
+def get_transaction_detail():
     current_user = get_jwt_identity()
     user = User.query.filter_by(id=current_user).first()
     if not user:
@@ -250,9 +256,8 @@ def get_transaction_detail(seller_id):
     serialized_transaction_detail_sellers = []
     for transaction_detail_seller in transaction_detail_sellers:
         serialized_transaction_detail_seller = {
-            "id": transaction_detail_seller.id,
-            "order_id": transaction_detail_seller.order_id,
-            "product_id": transaction_detail_seller.product_id,
+            "transaction_id": transaction_detail_seller.order_id,
+            "product": product.title if (product := Product.query.get(transaction_detail_seller.product_id)) else None,
             "total_price": transaction_detail_seller.total_price,
             "status": transaction_detail_seller.status.value
         }
@@ -264,33 +269,85 @@ def get_transaction_detail(seller_id):
     })
 
 
-@transactionBp.route('/transaction/<int:transaction_id>', methods=['POST'])
+@transactionBp.route('/transaction/seller', methods=['POST'])
 @jwt_required()
-def update_transaction(transaction_id):
+def update_transaction():
     current_user = get_jwt_identity()
     data = request.get_json()
     user = User.query.filter_by(id=current_user).first()
+
     if not user:
         return jsonify({
             "success": False,
             "message": "User not found"
         }), 404
+
     if user.role not in [Role_division.seller]:
         return jsonify({
             "success": False,
             "message": "You are not authorized to update transaction"
+        }), 404
+        
+    if not data.get('transaction_id'):
+        return jsonify({
+            "success": False,
+            "message": "Transaction ID is required"
+        }), 400
+
+    transaction_detail_sellers = TransactionDetailSeller.query.filter_by(order_id=data.get('transaction_id'), product_id=data.get('product_id')).first()
+    if not transaction_detail_sellers:
+        return jsonify({
+            "success": False,
+            "message": "Transaction detail not found"
+        }), 404
+    print(transaction_detail_sellers.status)
+
+    if transaction_detail_sellers.seller_id != user.id:
+        return jsonify({
+            "success": False,
+            "message": "You are not authorized to update this product"
         }), 403
-    transaction_detail_sellers = TransactionDetailSeller.query.filter_by(order_id=transaction_id).all()
-    for transaction_detail_seller in transaction_detail_sellers:
-        if transaction_detail_seller.seller_id == user.id:
-            transaction_detail_seller.status = data.get('status')
-            db.session.commit()
+
+    current_status = transaction_detail_sellers.status
+    new_status = data.get('status')
+
+    # Define the valid sequence for status updates
+    status_order = [StatusEnumSell.pending, StatusEnumSell.on_process, StatusEnumSell.on_delivery]
+
+    if new_status == StatusEnumSell.rejected:
+        # If the new status is 'rejected', allow it from any state
+        transaction_detail_sellers.status = new_status
+        db.session.commit()
+    else:
+        # Check if the status change follows the allowed order
+        if new_status not in status_order:
+            return jsonify({
+                "success": False,
+                "message": "Invalid status transition."
+            }), 400
+
+        if current_status == StatusEnumSell.pending and new_status == StatusEnumSell.on_process:
+            transaction_detail_sellers.status = new_status
+        elif current_status == StatusEnumSell.on_process and new_status == StatusEnumSell.on_delivery:
+            transaction_detail_sellers.status = new_status
         else:
             return jsonify({
                 "success": False,
-                "message": "You are not authorized to update this product"
-            }), 403
+                "message": "Status update cannot be skipped."
+            }), 400
+
+        db.session.commit()
+
+    # Check if all status in 1 transaction_id have all same status
+    transaction_detail_sellers_all = TransactionDetailSeller.query.filter_by(order_id=data.get('transaction_id')).all()
+    statuses = [seller.status for seller in transaction_detail_sellers_all]
+    if len(set(statuses)) == 1:
+        transaction_detail_customer = TrasactionDetailCustomer.query.filter_by(id=data.get('transaction_id')).first()
+        if transaction_detail_customer:
+            transaction_detail_customer.status = statuses[0]
+            db.session.commit()
+            
     return jsonify({
         "success": True,
         "message": "Transaction updated successfully"
-    })
+    }),500

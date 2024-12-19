@@ -6,10 +6,13 @@ from models.transaction_models.payment_method import PaymentMethod
 import enum
 
 
-class StatusEnum(enum.Enum):
-    pending = "pending",
-    complete = "complete",
+class StatusEnumCust(enum.Enum):
+    pending = "pending"
+    complete = "complete"
     rejected = "rejected"
+    on_delivery = "On Delivery"
+    on_process = "On Process"
+    
 
 
 class TrasactionDetailCustomer(db.Model):
@@ -19,7 +22,7 @@ class TrasactionDetailCustomer(db.Model):
     user_id = Column(Integer, ForeignKey(User.id), nullable=False)
     payment_id = Column(Integer, ForeignKey(PaymentMethod.id), nullable=False)
     total_price = Column(DECIMAL(10, 2), nullable=False)
-    status = Column(Enum(StatusEnum), nullable=False)
+    status = Column(Enum(StatusEnumCust), nullable=False)
     created_at = Column(DateTime, default=datetime.now(timezone.utc))
     updated_at = Column(DateTime, onupdate=datetime.now(timezone.utc))
     

@@ -6,10 +6,12 @@ from models.product_models.product import Product
 import enum
 
 
-class StatusEnum(enum.Enum):
-    pending = "pending",
-    complete = "complete",
+class StatusEnumSell(enum.Enum):
+    pending = "pending"
+    complete = "complete"
     rejected = "rejected"
+    on_delivery = "On Delivery"
+    on_process = "On Process"
 
 class TransactionDetailSeller(db.Model):
     __tablename__ = 'order_detail_sellers'
@@ -18,7 +20,7 @@ class TransactionDetailSeller(db.Model):
     seller_id = Column(Integer, nullable=False)
     product_id = Column(Integer, ForeignKey(Product.id), nullable=False)
     total_price = Column(DECIMAL(10, 2), nullable=False)
-    status = Column(Enum(StatusEnum), nullable=False)
+    status = Column(Enum(StatusEnumSell), nullable=False)
     created_at = Column(DateTime, default=datetime.now(timezone.utc))
     updated_at = Column(DateTime, onupdate=datetime.now(timezone.utc))
     
