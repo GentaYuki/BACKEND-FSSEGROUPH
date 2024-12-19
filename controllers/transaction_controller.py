@@ -13,13 +13,13 @@ transactionBp = Blueprint('transactionBp',__name__)
 
 # create transaction
 @transactionBp.route('/transaction', methods=['POST', 'OPTIONS'])
-@jwt_required()
+@jwt_required(optional=True)
 def create_order_transaction():
     if request.method == 'OPTIONS':
         return jsonify({
             'Access-Control-Allow-Origin': '*',
             'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-            'Access-Control-Allow-Headers': 'Content-Type'
+            'Access-Control-Allow-Headers': 'Content-Type, Authorization'
         }), 200
     current_user = get_jwt_identity()
     data = request.get_json()
@@ -29,7 +29,7 @@ def create_order_transaction():
         response = jsonify({"success": False, "message": "Missing JSON payload"})
         response.headers.add('Access-Control-Allow-Origin', '*')
         response.headers.add('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
-        response.headers.add('Access-Control-Allow-Headers', 'Content-Type')
+        response.headers.add('Access-Control-Allow-Headers', 'Content-Type, Authorization')
         return response, 400
 
     # Check if required fields are present
@@ -39,7 +39,7 @@ def create_order_transaction():
             response = jsonify({"success": False, "message": f"Missing required field: {field}"})
             response.headers.add('Access-Control-Allow-Origin', '*')
             response.headers.add('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
-            response.headers.add('Access-Control-Allow-Headers', 'Content-Type')
+            response.headers.add('Access-Control-Allow-Headers', 'Content-Type. Authorization')
             return response, 400
 
     try:
@@ -49,14 +49,14 @@ def create_order_transaction():
             response = jsonify({"success": False, "message": "User not found"})
             response.headers.add('Access-Control-Allow-Origin', '*')
             response.headers.add('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
-            response.headers.add('Access-Control-Allow-Headers', 'Content-Type')
+            response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
             return response, 404
 
         if user.role not in [Role_division.customer]:
             response = jsonify({"success": False, "message": "You are not authorized to create an order product"})
             response.headers.add('Access-Control-Allow-Origin', '*')
             response.headers.add('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
-            response.headers.add('Access-Control-Allow-Headers', 'Content-Type')
+            response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
             return response, 403
 
         # Check if payment method exists
@@ -65,7 +65,7 @@ def create_order_transaction():
             response = jsonify({"success": False, "message": "Payment method not found"})
             response.headers.add('Access-Control-Allow-Origin', '*')
             response.headers.add('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
-            response.headers.add('Access-Control-Allow-Headers', 'Content-Type')
+            response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
             return response, 404
 
         # Check if discount code exists
@@ -74,7 +74,7 @@ def create_order_transaction():
             response = jsonify({"success": False, "message": "Discount code not found"})
             response.headers.add('Access-Control-Allow-Origin', '*')
             response.headers.add('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
-            response.headers.add('Access-Control-Allow-Headers', 'Content-Type')
+            response.headers.add('Access-Control-Allow-Headers', 'Content-Type, Authorization')
             return response, 404
 
         # Create order transaction
@@ -85,7 +85,7 @@ def create_order_transaction():
                 response = jsonify({"success": False, "message": "Missing required fields: product_id and quantity"})
                 response.headers.add('Access-Control-Allow-Origin', '*')
                 response.headers.add('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
-                response.headers.add('Access-Control-Allow-Headers', 'Content-Type')
+                response.headers.add('Access-Control-Allow-Headers', 'Content-Type. Authorization')
                 return response, 400
 
             product = Product.query.filter_by(id=product_data['product_id']).first()
@@ -93,14 +93,14 @@ def create_order_transaction():
                 response = jsonify({"success": False, "message": "Product not found"})
                 response.headers.add('Access-Control-Allow-Origin', '*')
                 response.headers.add('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
-                response.headers.add('Access-Control-Allow-Headers', 'Content-Type')
+                response.headers.add('Access-Control-Allow-Headers', 'Content-Type, Authorization')
                 return response, 404
 
             if product.stock_qty < product_data['quantity']:
                 response = jsonify({"success": False, "message": "Insufficient product quantity"})
                 response.headers.add('Access-Control-Allow-Origin', '*')
                 response.headers.add('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
-                response.headers.add('Access-Control-Allow-Headers', 'Content-Type')
+                response.headers.add('Access-Control-Allow-Headers', 'Content-Type, Authorization')
                 return response, 400
 
             sum_price = product.price * product_data['quantity']
@@ -140,7 +140,7 @@ def create_order_transaction():
                 response = jsonify({"success": False, "message": "Seller not found"})
                 response.headers.add('Access-Control-Allow-Origin', '*')
                 response.headers.add('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
-                response.headers.add('Access-Control-Allow-Headers', 'Content-Type')
+                response.headers.add('Access-Control-Allow-Headers', 'Content-Type, Authorization')
                 return response, 404
 
             serialized_order_product = {
@@ -185,14 +185,14 @@ def create_order_transaction():
         })
         response.headers.add('Access-Control-Allow-Origin', '*')
         response.headers.add('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
-        response.headers.add('Access-Control-Allow-Headers', 'Content-Type')
+        response.headers.add('Access-Control-Allow-Headers', 'Content-Type, Authorization')
         return response
 
     except Exception as e:
         response = jsonify({"success": False, "message": str(e)})
         response.headers.add('Access-Control-Allow-Origin', '*')
         response.headers.add('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
-        response.headers.add('Access-Control-Allow-Headers', 'Content-Type')
+        response.headers.add('Access-Control-Allow-Headers', 'Content-Type, Authorization')
         return response, 500
 
     finally:
