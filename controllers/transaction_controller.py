@@ -18,69 +18,85 @@ def create_order_transaction():
     current_user = get_jwt_identity()
     data = request.get_json()
 
-    #cek if data is None
+    # Check if data is None
     if not data:
-        return jsonify({"success": False, "message": "Missing JSON payload"}), 400
+        response = jsonify({"success": False, "message": "Missing JSON payload"})
+        response.headers.add('Access-Control-Allow-Origin', '*')
+        response.headers.add('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
+        response.headers.add('Access-Control-Allow-Headers', 'Content-Type')
+        return response, 400
 
-    #cek if required fields are present
+    # Check if required fields are present
     required_fields = ['payment_method_id', 'discount_code', 'products']
     for field in required_fields:
         if field not in data:
-            return jsonify({"success": False, "message": f"Missing required field: {field}"}), 400
+            response = jsonify({"success": False, "message": f"Missing required field: {field}"})
+            response.headers.add('Access-Control-Allow-Origin', '*')
+            response.headers.add('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
+            response.headers.add('Access-Control-Allow-Headers', 'Content-Type')
+            return response, 400
 
     try:
-        #cek if user exist and have role customer
+        # Check if user exists and has role customer
         user = User.query.filter_by(id=current_user).first()
         if not user:
-            return jsonify({
-                "success": False,
-                "message": "User not found"
-            }), 404
-        if user.role not in [Role_division.customer]:
-            return jsonify({
-                "success": False,
-                "message": "You are not authorized to create an order product"
-            }), 403
+            response = jsonify({"success": False, "message": "User not found"})
+            response.headers.add('Access-Control-Allow-Origin', '*')
+            response.headers.add('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
+            response.headers.add('Access-Control-Allow-Headers', 'Content-Type')
+            return response, 404
 
-        #cek if payment method exist
+        if user.role not in [Role_division.customer]:
+            response = jsonify({"success": False, "message": "You are not authorized to create an order product"})
+            response.headers.add('Access-Control-Allow-Origin', '*')
+            response.headers.add('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
+            response.headers.add('Access-Control-Allow-Headers', 'Content-Type')
+            return response, 403
+
+        # Check if payment method exists
         payment_method = PaymentMethod.query.filter_by(id=data['payment_method_id']).first()
         if not payment_method:
-            return jsonify({
-                "success": False,
-                "message": "Payment method not found"
-            }), 404
+            response = jsonify({"success": False, "message": "Payment method not found"})
+            response.headers.add('Access-Control-Allow-Origin', '*')
+            response.headers.add('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
+            response.headers.add('Access-Control-Allow-Headers', 'Content-Type')
+            return response, 404
 
-        #cek if discount code exist
+        # Check if discount code exists
         discount = DiscountCode.query.filter_by(code=data['discount_code']).first()
         if not discount:
-            return jsonify({
-                "success": False,
-                "message": "Discount code not found"
-            }), 404
-        
-        # create order transaction
+            response = jsonify({"success": False, "message": "Discount code not found"})
+            response.headers.add('Access-Control-Allow-Origin', '*')
+            response.headers.add('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
+            response.headers.add('Access-Control-Allow-Headers', 'Content-Type')
+            return response, 404
+
+        # Create order transaction
         order_products = []
         total_price = 0
         for product_data in data['products']:
             if 'product_id' not in product_data or 'quantity' not in product_data:
-                return jsonify({
-                    "success": False,
-                    "message": "Missing required fields: product_id and quantity"
-                }), 400
+                response = jsonify({"success": False, "message": "Missing required fields: product_id and quantity"})
+                response.headers.add('Access-Control-Allow-Origin', '*')
+                response.headers.add('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
+                response.headers.add('Access-Control-Allow-Headers', 'Content-Type')
+                return response, 400
 
             product = Product.query.filter_by(id=product_data['product_id']).first()
             if not product:
-                return jsonify({
-                    "success": False,
-                    "message": "Product not found"
-                }), 404
+                response = jsonify({"success": False, "message": "Product not found"})
+                response.headers.add('Access-Control-Allow-Origin', '*')
+                response.headers.add('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
+                response.headers.add('Access-Control-Allow-Headers', 'Content-Type')
+                return response, 404
 
             if product.stock_qty < product_data['quantity']:
-                return jsonify({
-                    "success": False,
-                    "message": "Insufficient product quantity"
-                }), 400
-            
+                response = jsonify({"success": False, "message": "Insufficient product quantity"})
+                response.headers.add('Access-Control-Allow-Origin', '*')
+                response.headers.add('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
+                response.headers.add('Access-Control-Allow-Headers', 'Content-Type')
+                return response, 400
+
             sum_price = product.price * product_data['quantity']
             total_price += sum_price
 
@@ -91,13 +107,12 @@ def create_order_transaction():
                 sum_price=sum_price,
                 seller_id=product.seller_id
             )
-
             order_products.append(order_product)
 
-        #Apply discount
+        # Apply discount
         discount_value = discount.discount_value
         total_price -= discount_value
-        
+
         transaction_detail = TrasactionDetailCustomer(
             user_id=user.id,
             payment_id=payment_method.id,
@@ -116,10 +131,11 @@ def create_order_transaction():
         for order_product in order_products:
             seller = User.query.filter_by(id=order_product.seller_id).first()
             if not seller:
-                return jsonify({
-                    "success": False,
-                    "message": "Seller not found"
-                }), 404
+                response = jsonify({"success": False, "message": "Seller not found"})
+                response.headers.add('Access-Control-Allow-Origin', '*')
+                response.headers.add('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
+                response.headers.add('Access-Control-Allow-Headers', 'Content-Type')
+                return response, 404
 
             serialized_order_product = {
                 "transaction_id": order_product.order_id,
@@ -138,8 +154,8 @@ def create_order_transaction():
             "total_price": transaction_detail.total_price,
             "status": transaction_detail.status.value
         }
-        
-        #create transaction_detail_sellers from transaction_detail_customer
+
+        # Create transaction_detail_sellers from transaction_detail_customer
         transaction_detail_seller = []
         for order_product in order_products:
             transaction_detail_seller.append(
@@ -151,25 +167,28 @@ def create_order_transaction():
                     status=StatusEnumSell.pending
                 )
             )
-        
+
         db.session.add_all(transaction_detail_seller)
-        db.session.commit()    
-        
-        return jsonify(
-            {
-                "success": True,
-                "message": "Transaction and order created successfully",
-                "data_product": serialized_order_products,
-                "data_transaction": serialized_transaction_detail
-            }
-        )
+        db.session.commit()
+
+        response = jsonify({
+            "success": True,
+            "message": "Transaction and order created successfully",
+            "data_product": serialized_order_products,
+            "data_transaction": serialized_transaction_detail
+        })
+        response.headers.add('Access-Control-Allow-Origin', '*')
+        response.headers.add('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
+        response.headers.add('Access-Control-Allow-Headers', 'Content-Type')
+        return response
 
     except Exception as e:
-        return jsonify({
-            "success": False,
-            "message": str(e)
-        }), 500
-        
+        response = jsonify({"success": False, "message": str(e)})
+        response.headers.add('Access-Control-Allow-Origin', '*')
+        response.headers.add('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
+        response.headers.add('Access-Control-Allow-Headers', 'Content-Type')
+        return response, 500
+
     finally:
         db.session.close()
 #cek histoy transaction for customer        
