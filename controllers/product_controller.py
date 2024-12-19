@@ -46,7 +46,8 @@ def get_all_product():
             "success": False,
             "message": "Error retrieving products",
             "data": {"error": str(e)}
-        })
+        }), 500
+        
 @productBp.route('/product/seller/<user_id>', methods=['GET'])
 def product_by_user(user_id):
     try:

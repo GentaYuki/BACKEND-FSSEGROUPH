@@ -23,7 +23,7 @@ def create_app():
     )
 
     # Initialize extensions
-    CORS(app, origins=["http://localhost:3000", "http://127.0.0.1:3000"])
+    CORS(app, origins=["http://localhost:3000", "http://127.0.0.1:3000", "http://192.168.1.8:3000"])
     JWTManager(app)
     db.init_app(app)
     migrate.init_app(app, db)
