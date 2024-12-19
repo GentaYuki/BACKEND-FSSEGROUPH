@@ -10,8 +10,8 @@ class StatusEnumCust(enum.Enum):
     pending = "pending"
     complete = "complete"
     rejected = "rejected"
-    on_delivery = "On Delivery"
-    on_process = "On Process"
+    on_delivery = "on_delivery"
+    on_process = "on process"
     
 
 

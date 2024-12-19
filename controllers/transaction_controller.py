@@ -294,13 +294,15 @@ def update_transaction():
             "message": "Transaction ID is required"
         }), 400
 
-    transaction_detail_sellers = TransactionDetailSeller.query.filter_by(order_id=data.get('transaction_id'), product_id=data.get('product_id')).first()
+    transaction_detail_sellers = TransactionDetailSeller.query.filter_by(
+        order_id=data.get('transaction_id'),
+        product_id=data.get('product_id')
+    ).first()
     if not transaction_detail_sellers:
         return jsonify({
             "success": False,
             "message": "Transaction detail not found"
         }), 404
-    # print(transaction_detail_sellers.status)
 
     if transaction_detail_sellers.seller_id != user.id:
         return jsonify({
@@ -308,63 +310,48 @@ def update_transaction():
             "message": "You are not authorized to update this product"
         }), 403
 
-    current_status_data = transaction_detail_sellers.status
-    current_status = current_status_data.value
-    new_status = data.get('status')
-    
-    new_status_enum = StatusEnumSell(new_status)
-    # Define the valid sequence for status updates
+    current_status = transaction_detail_sellers.status.value
+    new_status_input = data.get('status').lower().replace(" ", "_")  # Normalize input
+
+    try:
+        new_status_enum = StatusEnumSell(new_status_input)
+    except ValueError:
+        return jsonify({
+            "success": False,
+            "message": f"Invalid status: {data.get('status')}. Allowed values: {', '.join([e.value for e in StatusEnumSell])}"
+        }), 400
+
     status_order = [StatusEnumSell.pending.value, StatusEnumSell.on_process.value, StatusEnumSell.on_delivery.value]
 
-    if new_status == StatusEnumSell.rejected:
-        # If the new status is 'rejected', allow it from any state
-        transaction_detail_sellers.status = new_status
+    if new_status_enum == StatusEnumSell.rejected:
+        # Allow 'rejected' from any state
+        transaction_detail_sellers.status = new_status_enum
         db.session.commit()
+        return jsonify({
+            "success": True,
+            "message": "Transaction status updated to rejected."
+        }), 200
     else:
-        # Check if the status change follows the allowed order
-        if new_status not in status_order:
-            print(status_order)
+        # Ensure the new status follows the valid sequence
+        if new_status_input not in status_order:
             return jsonify({
                 "success": False,
                 "message": "Invalid status transition.",
-                "new status" : new_status
+                "new_status": new_status_enum.value
             }), 400
-        print(current_status)
-        print(new_status_enum)
-        print(StatusEnumSell.pending.value)
-        print(StatusEnumSell.on_process.value)
-        print(StatusEnumSell.on_process.value == new_status)
-        print(current_status==StatusEnumSell.pending)
-        if current_status == StatusEnumSell.pending.value and new_status_enum ==    StatusEnumSell.on_process:
+
+        if current_status == StatusEnumSell.pending.value and new_status_enum == StatusEnumSell.on_process:
             transaction_detail_sellers.status = new_status_enum
-            return jsonify({
-                "success" : True,
-                "message" : "Status Updated Successfully 1"
-            })
         elif current_status == StatusEnumSell.on_process.value and new_status_enum == StatusEnumSell.on_delivery:
             transaction_detail_sellers.status = new_status_enum
-            return jsonify({
-                "success" : True,
-                "message" : "Status Updated Successfully 2"
-            })
         else:
             return jsonify({
                 "success": False,
                 "message": "Status update cannot be skipped."
             }), 400
 
-        db.session.commit()
-
-    # Check if all status in 1 transaction_id have all same status
-    transaction_detail_sellers_all = TransactionDetailSeller.query.filter_by(order_id=data.get('transaction_id')).all()
-    statuses = [seller.status for seller in transaction_detail_sellers_all]
-    if len(set(statuses)) == 1:
-        transaction_detail_customer = TrasactionDetailCustomer.query.filter_by(id=data.get('transaction_id')).first()
-        if transaction_detail_customer:
-            transaction_detail_customer.status = statuses[0]
-            db.session.commit()
-            
+    db.session.commit()
     return jsonify({
         "success": True,
-        "message": "Transaction updated successfully"
-    }),500
+        "message": f"Transaction status updated to {new_status_enum.value}."
+    }), 200
