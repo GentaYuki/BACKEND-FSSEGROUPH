@@ -12,9 +12,15 @@ from models.product_models.product import Product
 transactionBp = Blueprint('transactionBp',__name__)
 
 # create transaction
-@transactionBp.route('/transaction', methods=['POST'])
+@transactionBp.route('/transaction', methods=['POST', 'OPTIONS'])
 @jwt_required()
 def create_order_transaction():
+    if request.method == 'OPTIONS':
+        return jsonify({
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+            'Access-Control-Allow-Headers': 'Content-Type'
+        }), 200
     current_user = get_jwt_identity()
     data = request.get_json()
 
