@@ -1,6 +1,6 @@
 from flask import Blueprint, jsonify, request
 from app import db
-from flask_cors import CORS
+from flask_cors import CORS, cross_origin
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from models.user_models.user import User, Role_division
 from models.transaction_models.payment_method import PaymentMethod
@@ -19,8 +19,12 @@ CORS(transactionBp, resources={
         "allow_headers": ["Content-Type", "Authorization"]
     }
 })
+
+
 # create transaction
 @transactionBp.route('/transaction', methods=['POST'])
+
+@cross_origin()  # Allow CORS for this route
 @jwt_required()
 def create_order_transaction():
     current_user = get_jwt_identity()
@@ -166,6 +170,7 @@ def create_order_transaction():
 
 #cek histoy transaction for customer        
 @transactionBp.route('/historytransaction', methods=['GET'])
+@cross_origin()
 @jwt_required()
 def get_transaction():
     current_user = get_jwt_identity()
@@ -230,6 +235,7 @@ def get_transaction():
     })
 #create route to cek transaction detail for seller, so seller can cek each product in transacton detail seller
 @transactionBp.route('/transaction/seller', methods=['GET'])
+@cross_origin()
 @jwt_required()
 def get_transaction_detail():
     current_user = get_jwt_identity()
@@ -262,6 +268,7 @@ def get_transaction_detail():
 
 
 @transactionBp.route('/transaction/seller', methods=['POST'])
+@cross_origin()
 @jwt_required()
 def update_transaction():
     current_user = get_jwt_identity()
