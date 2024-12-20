@@ -1,4 +1,4 @@
-from flask import Blueprint, jsonify, request, Flask
+from flask import Blueprint, jsonify, request
 from app import db
 from flask_cors import CORS
 from flask_jwt_extended import jwt_required, get_jwt_identity
@@ -17,6 +17,12 @@ transactionBp = Blueprint('transactionBp',__name__)
 
 @jwt_required()
 def create_order_transaction():
+    if request.method == 'OPTIONS':
+        return jsonify({
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+            'Access-Control-Allow-Headers': 'Content-Type'
+        }), 200
     current_user = get_jwt_identity()
     data = request.get_json()
 
@@ -389,32 +395,44 @@ def update_transaction_customer():
     transaction = TrasactionDetailCustomer.query.filter_by(
         id=data.get('transaction_id')
     ).first()
+    
     if not transaction:
         return jsonify({
             "success": False,
             "message": "Transaction not found"
         }), 404
-
+    print(transaction.status)
     if transaction.user_id != user.id:
         return jsonify({
             "success": False,
             "message": "You are not authorized to update this transaction"
         }), 403
 
-    if transaction.status != 'on_delivery':
+    if transaction.status != StatusEnumCust.on_delivery:
         return jsonify({
             "success": False,
             "message": "Only transactions with status 'on_delivery' can be updated"
         }), 400
 
     new_status = data.get('status')
-    if new_status != 'complete':
+    status_mapping = {
+        'complete': 'complete'
+    }
+    if new_status not in status_mapping:
         return jsonify({
             "success": False,
             "message": "Invalid status update. Only 'complete' is allowed"
         }), 400
 
     transaction.status = new_status
+    db.session.commit()
+
+    # Update all TransactionDetailSeller with status complete
+    transaction_details_seller = TransactionDetailSeller.query.filter_by(order_id=transaction.id).all()
+    for detail in transaction_details_seller:
+        detail.status = status_mapping[new_status]
+        db.session.add(detail)
+
     db.session.commit()
     return jsonify({
         "success": True,
