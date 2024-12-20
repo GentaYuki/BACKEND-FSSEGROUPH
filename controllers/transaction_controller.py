@@ -322,7 +322,7 @@ def update_transaction():
     if new_status_enum == StatusEnumSell.rejected:
         # Allow 'rejected' from any state
         transaction_detail_sellers.status = new_status_enum
-        db.session.commit()
+        
         return jsonify({
             "success": True,
             "message": "Transaction status updated to rejected."
