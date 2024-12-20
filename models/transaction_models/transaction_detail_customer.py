@@ -11,7 +11,7 @@ class StatusEnumCust(enum.Enum):
     complete = "complete"
     rejected = "rejected"
     on_delivery = "on_delivery"
-    on_process = "on process"
+    on_process = "on_process"
     
 
 

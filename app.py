@@ -1,8 +1,8 @@
-from flask import Flask, jsonify
+from flask import Flask, jsonify, request, make_response
 from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
 from flask_jwt_extended import JWTManager
-from flask_cors import CORS
+from flask_cors import CORS, cross_origin
 import os
 
 # Initialize extensions
@@ -23,7 +23,27 @@ def create_app():
     )
 
     # Initialize extensions
-    CORS(app, resources={r"/*": {"origins": ["http://localhost:3000", "http://127.0.0.1:3000", "http://192.168.1.8:3000", "https://toko-edi-ya.vercel.app/"]}}, supports_credentials=True)
+    CORS(app, 
+         resources={r"/*": {
+             "origins": ["http://localhost:3000", 
+                        "http://127.0.0.1:3000", 
+                        "http://192.168.1.8:3000", 
+                        "https://toko-edi-ya.vercel.app"],
+             "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+             "allow_headers": ["Content-Type", "Authorization"],
+             "supports_credentials": True
+         }})
+    # Add preflight handler
+    @app.before_request
+    def handle_preflight():
+        if request.method == "OPTIONS":
+            response = make_response()
+            response.headers.add("Access-Control-Allow-Origin", request.headers.get("Origin", "*"))
+            response.headers.add("Access-Control-Allow-Headers", "Content-Type, Authorization")
+            response.headers.add("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+            response.headers.add("Access-Control-Allow-Credentials", "true")
+            return response
+    
     JWTManager(app)
     db.init_app(app)
     migrate.init_app(app, db)
@@ -52,6 +72,7 @@ def create_app():
     print('connected to database')
     # Register routes
     @app.route("/")
+    @cross_origin()  # Allow CORS for this route
     def helloWorld():
         return jsonify({"message": "Hello, cross-origin-world!"})
 

@@ -1,6 +1,6 @@
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, jsonify, request, Flask
 from app import db
-from flask_cors import CORS, cross_origin
+from flask_cors import CORS
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from models.user_models.user import User, Role_division
 from models.transaction_models.payment_method import PaymentMethod
@@ -11,20 +11,10 @@ from models.transaction_models.order_product import OrderProduct
 from models.product_models.product import Product
 
 transactionBp = Blueprint('transactionBp',__name__)
-# Apply CORS to this blueprint
-CORS(transactionBp, resources={
-    r"/transaction": {
-        "origins": ["http://localhost:3000"],
-        "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-        "allow_headers": ["Content-Type", "Authorization"]
-    }
-})
-
 
 # create transaction
 @transactionBp.route('/transaction', methods=['POST'])
 
-@cross_origin()  # Allow CORS for this route
 @jwt_required()
 def create_order_transaction():
     current_user = get_jwt_identity()
@@ -170,7 +160,7 @@ def create_order_transaction():
 
 #cek histoy transaction for customer        
 @transactionBp.route('/historytransaction', methods=['GET'])
-@cross_origin()
+
 @jwt_required()
 def get_transaction():
     current_user = get_jwt_identity()
@@ -235,7 +225,7 @@ def get_transaction():
     })
 #create route to cek transaction detail for seller, so seller can cek each product in transacton detail seller
 @transactionBp.route('/transaction/seller', methods=['GET'])
-@cross_origin()
+
 @jwt_required()
 def get_transaction_detail():
     current_user = get_jwt_identity()
@@ -268,7 +258,7 @@ def get_transaction_detail():
 
 
 @transactionBp.route('/transaction/seller', methods=['POST'])
-@cross_origin()
+
 @jwt_required()
 def update_transaction():
     current_user = get_jwt_identity()
@@ -349,14 +339,14 @@ def update_transaction():
                 "message": "Status update cannot be skipped."
             }), 400
      # Check if all TransactionDetailSeller have the same status
-    transaction_detail_sellers_all = TransactionDetailSeller.query.filter_by(order_id=data.get('transaction_id')).all()
-    statuses = [transaction_detail_seller.status.value for transaction_detail_seller in transaction_detail_sellers_all]
-    if len(set(statuses)) == 1:
-        # Update status in TransactionDetailCustomer
-        transaction_detail_customer = TrasactionDetailCustomer.query.filter_by(order_id=data.get('transaction_id')).first()
-        if transaction_detail_customer:
-            transaction_detail_customer.status = new_status_enum
-            db.session.add(transaction_detail_customer)
+    # transaction_detail_sellers_all = TransactionDetailSeller.query.filter_by(order_id=data.get('transaction_id')).all()
+    # statuses = [transaction_detail_seller.status.value for transaction_detail_seller in transaction_detail_sellers_all]
+    # if len(set(statuses)) == 1:
+    #     # Update status in TransactionDetailCustomer
+    #     transaction_detail_customer = TrasactionDetailCustomer.query.filter_by(id=data.get('transaction_id')).first()
+    #     if transaction_detail_customer:
+    #         transaction_detail_customer.status = new_status_enum
+    #         db.session.add(transaction_detail_customer)
         
     db.session.commit()
     return jsonify({
@@ -365,7 +355,7 @@ def update_transaction():
     }), 200
 
 @transactionBp.route('/updatetransaction', methods=['POST'])
-@cross_origin()
+
 @jwt_required()
 def update_transaction_customer():
     current_user = get_jwt_identity()
