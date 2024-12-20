@@ -23,7 +23,7 @@ def create_app():
     )
 
     # Initialize extensions
-    CORS(app, resources={r"/*": {"origins": ["http://localhost:3000", "http://127.0.0.1:3000", "http://192.168.1.8:3000"]}}, supports_credentials=True)
+    CORS(app, resources={r"/*": {"origins": ["http://localhost:3000", "http://127.0.0.1:3000", "http://192.168.1.8:3000", "https://toko-edi-ya.vercel.app/"]}}, supports_credentials=True)
     JWTManager(app)
     db.init_app(app)
     migrate.init_app(app, db)
