@@ -200,6 +200,7 @@ def get_transaction():
                     "message": "Product not found"
                 }), 404
             serialized_order_product = {
+                "product_id" : order_product.product_id,
                 "product_name": product.title,
                 "quantity": order_product.quantity,
                 "sum_price": order_product.sum_price,
