@@ -251,6 +251,7 @@ def get_transaction_detail():
     for transaction_detail_seller in transaction_detail_sellers:
         serialized_transaction_detail_seller = {
             "transaction_id": transaction_detail_seller.order_id,
+            "product_id": transaction_detail_seller.product_id,
             "product": product.title if (product := Product.query.get(transaction_detail_seller.product_id)) else None,
             "total_price": transaction_detail_seller.total_price,
             "status": transaction_detail_seller.status.value
