@@ -318,23 +318,18 @@ def update_transaction():
         }), 400
 
     status_order = [StatusEnumSell.pending.value, StatusEnumSell.on_process.value, StatusEnumSell.on_delivery.value]
-
-    if new_status_enum == StatusEnumSell.rejected:
+    try:
+        if new_status_enum == StatusEnumSell.rejected:
         # Allow 'rejected' from any state
-        transaction_detail_sellers.status = new_status_enum
-        
-        return jsonify({
-            "success": True,
-            "message": "Transaction status updated to rejected."
-        }), 200
-    else:
+            transaction_detail_sellers.status = new_status_enum
+        else:
         # Ensure the new status follows the valid sequence
-        if new_status_input not in status_order:
-            return jsonify({
-                "success": False,
-                "message": "Invalid status transition.",
-                "new_status": new_status_enum.value
-            }), 400
+            if new_status_input not in status_order:
+                return jsonify({
+                    "success": False,
+                    "message": "Invalid status transition.",
+                    "new_status": new_status_enum.value
+                }), 400
 
         if current_status == StatusEnumSell.pending.value and new_status_enum == StatusEnumSell.on_process:
             transaction_detail_sellers.status = new_status_enum
@@ -345,29 +340,36 @@ def update_transaction():
                 "success": False,
                 "message": "Status update cannot be skipped."
             }), 400
-    db.session.commit()
-    # Check if all TransactionDetailSeller have the same status
-    transaction_detail_sellers_all = TransactionDetailSeller.query.filter_by(order_id=data.get('transaction_id')).all()
-    print(transaction_detail_sellers_all)
-    statuses = [transaction_detail_seller.status.value for transaction_detail_seller in transaction_detail_sellers_all]
-    if len(set(statuses)) == 1:
-        # Update status in TransactionDetailCustomer
-        status_mapping = {
-            StatusEnumSell.pending: 'pending',
-            StatusEnumSell.on_process: 'on_process',
-            StatusEnumSell.on_delivery: 'on_delivery',
-            StatusEnumSell.rejected: 'rejected'
-        }
-        transaction_detail_customer = TrasactionDetailCustomer.query.filter_by(id=data.get('transaction_id')).first()
-        if transaction_detail_customer:
-            transaction_detail_customer.status = status_mapping[new_status_enum]
-            
-            db.session.commit()
-    db.session.commit()
-    return jsonify({
-        "success": True,
-        "message": f"Transaction status updated to {new_status_enum.value}."
-    }), 200
+
+        db.session.commit()
+
+        # Check if all TransactionDetailSeller have the same status
+        transaction_detail_sellers_all = TransactionDetailSeller.query.filter_by(order_id=data.get('transaction_id')).all()
+        print(transaction_detail_sellers_all)
+        statuses = [transaction_detail_seller.status.value for transaction_detail_seller in transaction_detail_sellers_all]
+        if len(set(statuses)) == 1:
+            # Update status in TransactionDetailCustomer
+            status_mapping = {
+                StatusEnumSell.pending: 'pending',
+                StatusEnumSell.on_process: 'on_process',
+                StatusEnumSell.on_delivery: 'on_delivery',
+                StatusEnumSell.rejected: 'rejected'
+            }
+            transaction_detail_customer = TrasactionDetailCustomer.query.filter_by(id=data.get('transaction_id')).first()
+            if transaction_detail_customer:
+                transaction_detail_customer.status = status_mapping[new_status_enum]
+                db.session.commit()
+
+            return jsonify({
+                "success": True,
+                "message": f"Transaction status updated to {new_status_enum.value}."
+            }), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({
+            "success": False,
+            "message": str(e)
+        }), 500
 
 @transactionBp.route('/updatetransaction', methods=['POST'])
 @jwt_required()
