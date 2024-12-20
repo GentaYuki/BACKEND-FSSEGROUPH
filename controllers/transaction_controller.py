@@ -436,6 +436,17 @@ def update_transaction_customer():
     for detail in transaction_details_seller:
         detail.status = status_mapping[new_status]
         db.session.add(detail)
+        
+    # Decrease stock quantity for each product
+    for detail in transaction_details_seller:
+        order_product = OrderProduct.query.filter_by(
+        order_id=transaction.id, product_id=detail.product_id
+    ).first()
+    if order_product:
+        product = Product.query.get(order_product.product_id)
+        if product:
+            product.stock_qty -= order_product.quantity
+            db.session.add(product)
 
     db.session.commit()
     return jsonify({
