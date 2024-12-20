@@ -51,9 +51,9 @@ def create_app():
 
     print('connected to database')
     # Register routes
-    @app.route('/')
-    def home():
-        return jsonify({'status': 'LIVE'})
+    @app.route("/")
+    def helloWorld():
+        return jsonify({"message": "Hello, cross-origin-world!"})
 
     return app
 

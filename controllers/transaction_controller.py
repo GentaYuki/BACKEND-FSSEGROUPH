@@ -348,9 +348,79 @@ def update_transaction():
                 "success": False,
                 "message": "Status update cannot be skipped."
             }), 400
-
+     # Check if all TransactionDetailSeller have the same status
+    transaction_detail_sellers_all = TransactionDetailSeller.query.filter_by(order_id=data.get('transaction_id')).all()
+    statuses = [transaction_detail_seller.status.value for transaction_detail_seller in transaction_detail_sellers_all]
+    if len(set(statuses)) == 1:
+        # Update status in TransactionDetailCustomer
+        transaction_detail_customer = TrasactionDetailCustomer.query.filter_by(order_id=data.get('transaction_id')).first()
+        if transaction_detail_customer:
+            transaction_detail_customer.status = new_status_enum
+            db.session.add(transaction_detail_customer)
+        
     db.session.commit()
     return jsonify({
         "success": True,
         "message": f"Transaction status updated to {new_status_enum.value}."
+    }), 200
+
+@transactionBp.route('/updatetransaction', methods=['POST'])
+@cross_origin()
+@jwt_required()
+def update_transaction_customer():
+    current_user = get_jwt_identity()
+    data = request.get_json()
+    user = User.query.filter_by(id=current_user).first()
+
+    if not user:
+        return jsonify({
+            "success": False,
+            "message": "User not found"
+        }), 404
+
+    if user.role not in [Role_division.customer]:
+        return jsonify({
+            "success": False,
+            "message": "You are not authorized to update transaction"
+        }), 403
+
+    if not data.get('transaction_id'):
+        return jsonify({
+            "success": False,
+            "message": "Transaction ID is required"
+        }), 400
+
+    transaction = TrasactionDetailCustomer.query.filter_by(
+        id=data.get('transaction_id')
+    ).first()
+    if not transaction:
+        return jsonify({
+            "success": False,
+            "message": "Transaction not found"
+        }), 404
+
+    if transaction.user_id != user.id:
+        return jsonify({
+            "success": False,
+            "message": "You are not authorized to update this transaction"
+        }), 403
+
+    if transaction.status != StatusEnumCust.on_delivery.value:
+        return jsonify({
+            "success": False,
+            "message": "Only transactions with status 'on_delivery' can be updated"
+        }), 400
+
+    new_status = data.get('status')
+    if new_status != StatusEnumCust.complete.value:
+        return jsonify({
+            "success": False,
+            "message": "Invalid status update. Only 'complete' is allowed"
+        }), 400
+
+    transaction.status = new_status
+    db.session.commit()
+    return jsonify({
+        "success": True,
+        "message": f"Transaction status updated to {new_status}"
     }), 200
