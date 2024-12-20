@@ -362,7 +362,7 @@ def update_transaction():
         if transaction_detail_customer:
             transaction_detail_customer.status = status_mapping[new_status_enum]
             db.session.add(transaction_detail_customer)
-        
+            db.session.commit()
     db.session.commit()
     return jsonify({
         "success": True,
