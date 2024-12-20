@@ -258,7 +258,6 @@ def get_transaction_detail():
 
 
 @transactionBp.route('/transaction/seller', methods=['POST'])
-
 @jwt_required()
 def update_transaction():
     current_user = get_jwt_identity()
@@ -338,15 +337,23 @@ def update_transaction():
                 "success": False,
                 "message": "Status update cannot be skipped."
             }), 400
-     # Check if all TransactionDetailSeller have the same status
-    # transaction_detail_sellers_all = TransactionDetailSeller.query.filter_by(order_id=data.get('transaction_id')).all()
-    # statuses = [transaction_detail_seller.status.value for transaction_detail_seller in transaction_detail_sellers_all]
-    # if len(set(statuses)) == 1:
-    #     # Update status in TransactionDetailCustomer
-    #     transaction_detail_customer = TrasactionDetailCustomer.query.filter_by(id=data.get('transaction_id')).first()
-    #     if transaction_detail_customer:
-    #         transaction_detail_customer.status = new_status_enum
-    #         db.session.add(transaction_detail_customer)
+    db.session.commit()
+    # Check if all TransactionDetailSeller have the same status
+    transaction_detail_sellers_all = TransactionDetailSeller.query.filter_by(order_id=data.get('transaction_id')).all()
+    print(transaction_detail_sellers_all)
+    statuses = [transaction_detail_seller.status.value for transaction_detail_seller in transaction_detail_sellers_all]
+    if len(set(statuses)) == 1:
+        # Update status in TransactionDetailCustomer
+        status_mapping = {
+            StatusEnumSell.pending: 'pending',
+            StatusEnumSell.on_process: 'on_process',
+            StatusEnumSell.on_delivery: 'on_delivery',
+            StatusEnumSell.rejected: 'rejected'
+        }
+        transaction_detail_customer = TrasactionDetailCustomer.query.filter_by(id=data.get('transaction_id')).first()
+        if transaction_detail_customer:
+            transaction_detail_customer.status = status_mapping[new_status_enum]
+            db.session.add(transaction_detail_customer)
         
     db.session.commit()
     return jsonify({
