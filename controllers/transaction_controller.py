@@ -361,7 +361,7 @@ def update_transaction():
         transaction_detail_customer = TrasactionDetailCustomer.query.filter_by(id=data.get('transaction_id')).first()
         if transaction_detail_customer:
             transaction_detail_customer.status = status_mapping[new_status_enum]
-            db.session.add(transaction_detail_customer)
+            
             db.session.commit()
     db.session.commit()
     return jsonify({
