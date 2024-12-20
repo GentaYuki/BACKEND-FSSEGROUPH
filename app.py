@@ -24,15 +24,15 @@ def create_app():
 
     # Initialize extensions
     CORS(app, 
-         resources={r"/*": {
-             "origins": ["http://localhost:3000", 
-                        "http://127.0.0.1:3000", 
-                        "http://192.168.1.8:3000", 
-                        "https://toko-edi-ya.vercel.app"],
-             "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-             "allow_headers": ["Content-Type", "Authorization"],
-             "supports_credentials": True
-         }})
+    resources={r"/*": {
+        "origins": ["http://localhost:3000", 
+                   "http://127.0.0.1:3000", 
+                   "http://192.168.1.8:3000", 
+                   "https://toko-edi-ya.vercel.app"],
+        "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+        "allow_headers": ["Content-Type", "Authorization", "Access-Control-Allow-Methods"], # Add this line
+        "supports_credentials": True
+    }})
     # Add preflight handler
     @app.before_request
     def handle_preflight():
