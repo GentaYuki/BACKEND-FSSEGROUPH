@@ -362,7 +362,6 @@ def update_transaction():
     }), 200
 
 @transactionBp.route('/updatetransaction', methods=['POST'])
-
 @jwt_required()
 def update_transaction_customer():
     current_user = get_jwt_identity()
@@ -380,7 +379,7 @@ def update_transaction_customer():
             "success": False,
             "message": "You are not authorized to update transaction"
         }), 403
-
+        
     if not data.get('transaction_id'):
         return jsonify({
             "success": False,
@@ -402,14 +401,14 @@ def update_transaction_customer():
             "message": "You are not authorized to update this transaction"
         }), 403
 
-    if transaction.status != StatusEnumCust.on_delivery.value:
+    if transaction.status != 'on_delivery':
         return jsonify({
             "success": False,
             "message": "Only transactions with status 'on_delivery' can be updated"
         }), 400
 
     new_status = data.get('status')
-    if new_status != StatusEnumCust.complete.value:
+    if new_status != 'complete':
         return jsonify({
             "success": False,
             "message": "Invalid status update. Only 'complete' is allowed"
