@@ -13,7 +13,7 @@ import os
 
 productBp = Blueprint('productBp',__name__)
 
-
+#retrieve all product to show in landing page
 @productBp.route('/product', methods=['GET'])
 def get_all_product():
     try:
