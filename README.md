@@ -2,7 +2,13 @@
 
 ## MarketPlace "Toko Edi Ya"
 
-[![Build Status](https://travis-ci.org/joemccann/dillinger.svg?branch=master)](https://travis-ci.org/joemccann/dillinger)
+### TechStack
+
+- **Python** with **Flask** as a framework backend
+- **MySQL** for database using **SQLAlchemy** as ORM
+- **Flask-JWT-Extended** for authentication with JSON Web Token (JWT)
+- **Bcrypt** for password hashing and security
+- **Python-dotenv** for managing environment variables 
 
 ### About "Toko Edi Ya" (TEY)
 "Toko Edi Ya" is a web application designed to support users in:
@@ -19,7 +25,7 @@
 
 ## How to Deploy - Backend Side
 
-To deploy the backend side of the project, follow these steps:
+✈To deploy the backend side of the project, follow these steps:
 
 1. **Clone the Repository**
    - Clone the GitHub repository from [this link](https://github.com/GentaYuki/BACKEND-FSSEGROUPH).
@@ -30,16 +36,16 @@ To deploy the backend side of the project, follow these steps:
      pip install -r requirements.txt
      ```
 
-3. **Setup Environtment Variables**
+3. **Setup Environment Variables**
    - Create file `.env` in root project
-   ```env
-   DB_USERNAME = your_DB_user_name
-   DB_PASSWORD = your_private_key
-   DB_HOST     = your_Host
-   DB_PORT     = your_DB_port
-   DB_NAME     = your_DB_name
-   ```
-   
+      ```env
+      DB_USERNAME = your_DB_user_name
+      DB_PASSWORD = your_private_key
+      DB_HOST     = your_Host
+      DB_PORT     = your_DB_port
+      DB_NAME     = your_DB_name
+      ```
+
 4. **Initialize the Database**
    - Run the following command to initialize the database:
      ```
