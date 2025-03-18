@@ -24,15 +24,22 @@ To deploy the backend side of the project, follow these steps:
 1. **Clone the Repository**
    - Clone the GitHub repository from [this link](https://github.com/GentaYuki/BACKEND-FSSEGROUPH).
 
-2. **Select the Branch**
-   - Choose the `dev/Genta-authentication` branch.
-
-3. **Install Dependencies**
+2. **Install Dependencies**
    - Run the following command in the terminal:
      ```
      pip install -r requirements.txt
      ```
 
+3. **Setup Environtment Variables**
+   - Create file `.env` in root project
+   ```env
+   DB_USERNAME = your_DB_user_name
+   DB_PASSWORD = your_private_key
+   DB_HOST     = your_Host
+   DB_PORT     = your_DB_port
+   DB_NAME     = your_DB_name
+   ```
+   
 4. **Initialize the Database**
    - Run the following command to initialize the database:
      ```
