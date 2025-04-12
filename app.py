@@ -5,6 +5,16 @@ from flask_jwt_extended import JWTManager
 from flask_cors import CORS, cross_origin
 import os
 
+from sqlalchemy import event
+from sqlalchemy.engine import Engine
+
+# Force connection collation globally
+@event.listens_for(Engine, "connect")
+def set_session_encoding(dbapi_connection, connection_record):
+    cursor = dbapi_connection.cursor()
+    cursor.execute("SET collation_connection = 'utf8mb4_general_ci'")
+    cursor.close()
+
 # Initialize extensions
 db = SQLAlchemy()
 migrate = Migrate()
