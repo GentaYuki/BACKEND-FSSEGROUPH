@@ -15,7 +15,7 @@ def create_app():
     print('connecting to database...')
     # Configure app
     app.config.update(
-        SQLALCHEMY_DATABASE_URI=f'mysql+mysqlconnector://{os.getenv("DB_USERNAME")}:{os.getenv("DB_PASSWORD")}@{os.getenv("DB_HOST")}:{os.getenv("DB_PORT")}/{os.getenv("DB_NAME")}',
+        SQLALCHEMY_DATABASE_URI=f'mysql+mysqlconnector://{os.getenv("DB_USERNAME")}:{os.getenv("DB_PASSWORD")}@{os.getenv("DB_HOST")}:{os.getenv("DB_PORT")}/{os.getenv("DB_NAME")}?collation=utf8mb4_general_ci',
         SQLALCHEMY_TRACK_MODIFICATIONS=False,
         SECRET_KEY="secret!",
         JWT_SECRET_KEY="secret!",
